@@ -1,0 +1,59 @@
+version = 1
+revision = 3
+requires-python = ">=3.11"
+
+[[package]]
+name = "deno"
+version = "2.9.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/27/06ad530f3be68dafdfae57457c534d5bb014cd6da58c2bd0f5b28f9ab8fa/deno-2.9.5.tar.gz", hash = "sha256:2f9681d7d2118a5e92e18915d1d88a6966fd6173ba4a8fb772f04080057e5a6a", size = 8166, upload-time = "2026-08-06T15:08:32.319Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a8/99/1a1ff9e40e82d857b426a86d2159e3560000c2f98edb0f63170256582067/deno-2.9.5-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:d321f54f82cb535904a108afd970c1c3e1db23716db1ab0cda5e0ca993dbf824", size = 42353187, upload-time = "2026-08-06T15:08:10.431Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/3a/d60dac70124d045dfc6f01bbd181e2865904ecca5710b2d319869ff59727/deno-2.9.5-py3-none-macosx_11_0_arm64.whl", hash = "sha256:696dffb666d6336a3527857b2f9b665db33b07883bb6adc3595dbb3b78748cf1", size = 38520058, upload-time = "2026-08-06T15:08:14.978Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/b4/5d462bc738b2172043a470ab97d7b6f3e7a287fa1916065e777e034ef1b1/deno-2.9.5-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:bccec0965917b6daa323f9ce6ad8e884e0854506b0cdaec9de41bdac7620109a", size = 39908447, upload-time = "2026-08-06T15:08:19.751Z" },
+    { url = "https://files.pythonhosted.org/packages/60/54/c6e0fb4b5e96dd7611bc75c8137046d7436666bd2e278f686e36d6a805af/deno-2.9.5-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:e5aec0419739fd0359663a78765d4feda19d1d0b60a682d25add9b78e19f95b4", size = 41642333, upload-time = "2026-08-06T15:08:24.965Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/0b/3ca6468ec928d817ce6ef062ddfa11e71a3c68035c3401057d7cb33845f6/deno-2.9.5-py3-none-win_amd64.whl", hash = "sha256:570d4ee6f1ddb16d14848d36dac6cd2f586d8a0c94cf9c3e6b5da130da2597d5", size = 41615800, upload-time = "2026-08-06T15:08:30.015Z" },
+]
+
+[[package]]
+name = "imageio-ffmpeg"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/44/bd/c3343c721f2a1b0c9fc71c1aebf1966a3b7f08c2eea8ed5437a2865611d6/imageio_ffmpeg-0.6.0.tar.gz", hash = "sha256:e2556bed8e005564a9f925bb7afa4002d82770d6b08825078b7697ab88ba1755", size = 25210, upload-time = "2025-01-16T21:34:32.747Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/58/87ef68ac83f4c7690961bce288fd8e382bc5f1513860fc7f90a9c1c1c6bf/imageio_ffmpeg-0.6.0-py3-none-macosx_10_9_intel.macosx_10_9_x86_64.whl", hash = "sha256:9d2baaf867088508d4a3458e61eeb30e945c4ad8016025545f66c4b5aaef0a61", size = 24932969, upload-time = "2025-01-16T21:34:20.464Z" },
+    { url = "https://files.pythonhosted.org/packages/40/5c/f3d8a657d362cc93b81aab8feda487317da5b5d31c0e1fdfd5e986e55d17/imageio_ffmpeg-0.6.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:b1ae3173414b5fc5f538a726c4e48ea97edc0d2cdc11f103afee655c463fa742", size = 21113891, upload-time = "2025-01-16T21:34:00.277Z" },
+    { url = "https://files.pythonhosted.org/packages/33/e7/1925bfbc563c39c1d2e82501d8372734a5c725e53ac3b31b4c2d081e895b/imageio_ffmpeg-0.6.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:1d47bebd83d2c5fc770720d211855f208af8a596c82d17730aa51e815cdee6dc", size = 25632706, upload-time = "2025-01-16T21:33:53.475Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/2d/43c8522a2038e9d0e7dbdf3a61195ecc31ca576fb1527a528c877e87d973/imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl", hash = "sha256:c7e46fcec401dd990405049d2e2f475e2b397779df2519b544b8aab515195282", size = 29498237, upload-time = "2025-01-16T21:34:13.726Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/13/59da54728351883c3c1d9fca1710ab8eee82c7beba585df8f25ca925f08f/imageio_ffmpeg-0.6.0-py3-none-win32.whl", hash = "sha256:196faa79366b4a82f95c0f4053191d2013f4714a715780f0ad2a68ff37483cc2", size = 19652251, upload-time = "2025-01-16T21:34:06.812Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/c6/fa760e12a2483469e2bf5058c5faff664acf66cadb4df2ad6205b016a73d/imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl", hash = "sha256:02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a", size = 31246824, upload-time = "2025-01-16T21:34:28.6Z" },
+]
+
+[[package]]
+name = "playlist-download"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "imageio-ffmpeg" },
+    { name = "yt-dlp", extra = ["deno"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "imageio-ffmpeg", specifier = ">=0.6.0" },
+    { name = "yt-dlp", extras = ["deno"], specifier = ">=2026.7.4" },
+]
+
+[[package]]
+name = "yt-dlp"
+version = "2026.7.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/c5/9972af4b472b0d55badf841ebafd2f98944cb0ae0f46e11d01f363ea5b91/yt_dlp-2026.7.4.tar.gz", hash = "sha256:b094813404f87a9dd2186f00815231df32e5fd8a5403be0f807b3bb2d21a4432", size = 3049326, upload-time = "2026-07-04T22:42:14.837Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/8a/cd4c9b02c10c563adfe78118310129641900e1cd6de888cfae2452072696/yt_dlp-2026.7.4-py3-none-any.whl", hash = "sha256:f11f2b11d5a8ac4059f9bdf29fa4407dc7c6bb00c5097e95ca22a7a9db518266", size = 3184705, upload-time = "2026-07-04T22:42:12.989Z" },
+]
+
+[package.optional-dependencies]
+deno = [
+    { name = "deno" },
+]

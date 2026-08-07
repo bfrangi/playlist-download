@@ -1,0 +1,25 @@
+[project]
+name = "playlist-download"
+version = "0.1.0"
+description = "Download the audio from a YouTube playlist as MP3s, with no system dependencies."
+readme = "README.md"
+authors = [
+    { name = "Bernat Frangi", email = "bernat.frangi@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "imageio-ffmpeg>=0.6.0",
+    "yt-dlp[deno]>=2026.7.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/bfrangi/playlist-download"
+Repository = "https://github.com/bfrangi/playlist-download"
+Issues = "https://github.com/bfrangi/playlist-download/issues"
+
+[project.scripts]
+playlist-download = "playlist_download:main"
+
+[build-system]
+requires = ["uv_build>=0.10.5,<0.11.0"]
+build-backend = "uv_build"

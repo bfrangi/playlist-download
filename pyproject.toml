@@ -1,6 +1,6 @@
 [project]
 name = "playlist-download"
-version = "0.3.0"
+version = "0.3.1"
 description = "Download the audio from a YouTube playlist as MP3s, with no system dependencies."
 readme = "README.md"
 authors = [

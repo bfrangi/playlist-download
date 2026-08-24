@@ -85,6 +85,11 @@ playlist-download --artist 'Río Norte' --album 'Días de Invierno' \
     -o 'albums/Dias de Invierno' 'https://www.youtube.com/playlist?list=PLxxxxxxxx'
 ```
 
+Anything you pass is also written into the file's own tags, so the filename and
+the embedded metadata agree rather than disagreeing. `--artist` additionally
+sets `album_artist`, which is what music players group an album by. Without
+overrides the tags come from the video as before.
+
 `--song` names every file identically, so it only makes sense for a single
 video; the tool warns if you use it on a playlist. Add `--number` to prefix
 each file with its playlist position (`001 - `), which is dropped automatically

@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from yt_dlp import YoutubeDL
+from yt_dlp.postprocessor.common import PostProcessor
 
 FORMATS = ("mp3", "m4a", "opus", "flac", "wav")
 
@@ -134,6 +135,42 @@ def build_template(
     parts.append(f"{escape_literal(album)} - " if album else ALBUM_FIELD)
     parts.append(escape_literal(song) if song else SONG_FIELD)
     return "".join(parts)
+
+
+class TagOverridePP(PostProcessor):
+    """Write the command-line artist/album/song into the file's own tags.
+
+    The metadata post-processor maps any `meta_<name>` key in the info dict
+    straight onto the output tag of that name, overriding whatever it derived
+    from the video. Injecting them before the download keeps the embedded tags
+    consistent with the filename, instead of the filename saying one thing and
+    the tags another.
+    """
+
+    def __init__(self, overrides: dict[str, str]) -> None:
+        super().__init__()
+        self._overrides = overrides
+
+    def run(self, info):
+        info.update(self._overrides)
+        return [], info
+
+
+def build_tag_overrides(
+    album: str | None, artist: str | None, song: str | None
+) -> dict[str, str]:
+    """Map the naming overrides onto the tag names the file should carry."""
+    overrides = {}
+    if artist:
+        overrides["meta_artist"] = artist
+        # Players group an album by album_artist, not artist; without this a
+        # compilation-style album scatters across the library.
+        overrides["meta_album_artist"] = artist
+    if album:
+        overrides["meta_album"] = album
+    if song:
+        overrides["meta_title"] = song
+    return overrides
 
 
 def find_ffmpeg() -> str:
@@ -307,8 +344,13 @@ def main() -> None:
         restrict_filenames=args.ascii_filenames,
     )
 
+    overrides = build_tag_overrides(args.album, args.artist, args.song)
+
     try:
         with YoutubeDL(options) as ydl:
+            if overrides:
+                # 'pre_process' so the keys exist before the metadata stage.
+                ydl.add_post_processor(TagOverridePP(overrides), when="pre_process")
             exit_code = ydl.download([url])
     except KeyboardInterrupt:
         print("\nInterrupted. Re-run the same command to resume.", file=sys.stderr)

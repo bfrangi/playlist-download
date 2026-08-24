@@ -41,7 +41,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "imageio-ffmpeg", specifier = ">=0.6.0" },
-    { name = "yt-dlp", extras = ["deno"], specifier = ">=2026.7.4" },
+    { name = "yt-dlp", extras = ["deno"], specifier = ">=2026.8.19" },
 ]
 
 [[package]]

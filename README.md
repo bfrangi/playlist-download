@@ -38,8 +38,8 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"   # Windows
 
 ```
 playlist-download [-o DIR] [-f FORMAT] [-q QUALITY] [--no-thumbnail]
-                  [--items SPEC] [--album NAME] [--artist NAME]
-                  [--ascii-filenames] URL
+                  [--items SPEC] [--artist NAME] [--album NAME] [--song NAME]
+                  [--number] [--ascii-filenames] URL
 ```
 
 | Option | Default | Meaning |
@@ -49,31 +49,48 @@ playlist-download [-o DIR] [-f FORMAT] [-q QUALITY] [--no-thumbnail]
 | `-q`, `--quality` | `0` | 0–10 VBR (0 is best), or a bitrate like `192K` |
 | `--no-thumbnail` | off | Skip embedding cover art |
 | `--items` | all | A subset: `1-10`, `3,7,12`, `5:` |
-| `--album` | off | Name files `<artist> - <album> - <song>` |
-| `--artist` | track's own tag | Artist to use with `--album` |
+| `--artist` | the video's tag | Override the artist part of the filename |
+| `--album` | the video's tag | Override the album part of the filename |
+| `--song` | track tag, else title | Override the song part of the filename |
+| `--number` | off | Prefix each file with its playlist position |
 | `--ascii-filenames` | off | Strip accents and spaces from filenames |
 
-By default files land as `001 - Song Name.mp3`, numbered by playlist position,
-with title, artist, date, chapters, and cover art embedded. A single video is
-saved as just `Song Name.mp3`, with no number.
+Files are named `<artist> - <album> - <song>.mp3`, with title, artist, date,
+chapters, and cover art embedded in the file itself.
 
-### Naming for a music library
+### Filenames
 
-Playlist numbering is the wrong shape for an album you want to browse by name.
-`--album` switches to `<artist> - <album> - <song>`:
+Each of the three parts resolves the same way:
 
-```sh
-playlist-download --album 'Días de Invierno' --artist 'Río Norte' \
-    -o 'albums/Dias de Invierno' 'https://www.youtube.com/playlist?list=PLxxxxxxxx'
-```
+1. the value you pass on the command line, else
+2. the value carried by the video's own metadata, else
+3. nothing at all — the part is dropped along with its separator.
+
+So a video tagged with full music metadata gives:
 
 ```
 Río Norte - Días de Invierno - Corazón de Piedra.mp3
 ```
 
-Leave `--artist` off to take the artist from each track's own metadata.
+while an ordinary upload carrying no artist or album tags gives just:
 
-The song name comes from the track tag where one exists. Some sources supply a
+```
+Song Name.mp3
+```
+
+No empty ` - - ` is left behind. Override any part you like:
+
+```sh
+playlist-download --artist 'Río Norte' --album 'Días de Invierno' \
+    -o 'albums/Dias de Invierno' 'https://www.youtube.com/playlist?list=PLxxxxxxxx'
+```
+
+`--song` names every file identically, so it only makes sense for a single
+video; the tool warns if you use it on a playlist. Add `--number` to prefix
+each file with its playlist position (`001 - `), which is dropped automatically
+for a single video.
+
+The song part prefers the track tag over the video title. Some sources supply a
 clean song title in metadata; an ordinary channel upload often has no track tag
 at all, in which case the video title is used verbatim — including any
 "(Official Video)" padding the uploader put there. Check one file before

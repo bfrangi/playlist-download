@@ -27,9 +27,19 @@ YOUTUBE_HOSTS = frozenset(
 # makes a second run cheap: yt-dlp skips anything listed here.
 ARCHIVE_NAME = ".downloaded.txt"
 
-# The conditional prefix keeps playlist numbering but drops it for a single
-# video, which would otherwise be saved as "NA - Title.mp3".
-DEFAULT_TEMPLATE = "%(playlist_index&{:03d} - |)s%(title)s"
+# Each naming component emits "<value> - " when its field is present and
+# nothing at all when it is absent, so a missing artist or album takes its
+# separator with it instead of leaving " - - " in the filename.
+ARTIST_FIELD = "%(artist&{} - |)s"
+ALBUM_FIELD = "%(album&{} - |)s"
+# `track` falls back to `title`: some sources supply a clean song name in
+# metadata, while an ordinary upload only has the video title (often cluttered
+# with "(Official Video)" and similar).
+SONG_FIELD = "%(track,title)s"
+# Dropped for a single video, which would otherwise be saved as "NA - Title".
+NUMBER_FIELD = "%(playlist_index&{:03d} - |)s"
+
+DEFAULT_TEMPLATE = f"{ARTIST_FIELD}{ALBUM_FIELD}{SONG_FIELD}"
 
 
 def _package_version() -> str:
@@ -95,20 +105,35 @@ def escape_literal(text: str) -> str:
     return text.replace("%", "%%").replace("/", "-").replace("\\", "-").strip()
 
 
-def build_template(album: str | None, artist: str | None) -> str:
-    """Choose the filename template.
+def _looks_like_single_video(url: str) -> bool:
+    """True when the URL addresses one video rather than a playlist."""
+    parsed = urlparse(url)
+    if parsed.netloc.lower().endswith("youtu.be"):
+        return True
+    query = parse_qs(parsed.query)
+    return "v" in query and "list" not in query
 
-    Default is playlist order. With --album the files are named for a music
-    library instead, where track order matters less than finding a song.
+
+def build_template(
+    album: str | None = None,
+    artist: str | None = None,
+    song: str | None = None,
+    number: bool = False,
+) -> str:
+    """Build the filename template from three optional components.
+
+    Each of artist, album and song resolves in the same order: an explicit
+    command-line value, else the value carried by the video's own metadata,
+    else omitted entirely along with its separator. A video with no music
+    metadata and no overrides is therefore named after its title alone.
     """
-    if album is None:
-        return DEFAULT_TEMPLATE
-
-    # `track` falls back to `title`: some sources supply a clean song name in
-    # metadata, while an ordinary upload only has the video title (often
-    # cluttered with "(Official Video)" and similar).
-    artist_part = escape_literal(artist) if artist else "%(artist,uploader)s"
-    return f"{artist_part} - {escape_literal(album)} - %(track,title)s"
+    parts = []
+    if number:
+        parts.append(NUMBER_FIELD)
+    parts.append(f"{escape_literal(artist)} - " if artist else ARTIST_FIELD)
+    parts.append(f"{escape_literal(album)} - " if album else ALBUM_FIELD)
+    parts.append(escape_literal(song) if song else SONG_FIELD)
+    return "".join(parts)
 
 
 def find_ffmpeg() -> str:
@@ -219,17 +244,27 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="download a subset, e.g. '1-10' or '3,7,12' or '5:'",
     )
     parser.add_argument(
+        "--artist",
+        metavar="NAME",
+        help="override the artist part of the filename (default: the video's own tag)",
+    )
+    parser.add_argument(
         "--album",
         metavar="NAME",
+        help="override the album part of the filename (default: the video's own tag)",
+    )
+    parser.add_argument(
+        "--song",
+        metavar="NAME",
         help=(
-            "name files '<artist> - <album> - <song>' instead of numbering them "
-            "by playlist position"
+            "override the song part of the filename (default: the video's track "
+            "tag, else its title)"
         ),
     )
     parser.add_argument(
-        "--artist",
-        metavar="NAME",
-        help="artist for --album naming (default: the track's own artist tag)",
+        "--number",
+        action="store_true",
+        help="prefix each file with its position in the playlist",
     )
     parser.add_argument(
         "--ascii-filenames",
@@ -250,8 +285,14 @@ def main() -> None:
     url = normalize_url(args.url)
     check_is_downloadable(url)
 
-    if args.artist and not args.album:
-        raise SystemExit("error: --artist only applies together with --album")
+    if args.song and args.items != "1" and not _looks_like_single_video(url):
+        # One fixed song name across a playlist would give every track the same
+        # filename, and nooverwrites would then discard all but the first.
+        print(
+            "warning: --song names every downloaded file identically; it is "
+            "meant for a single video.",
+            file=sys.stderr,
+        )
 
     output_dir: Path = args.output.expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -262,7 +303,7 @@ def main() -> None:
         quality=args.quality,
         embed_thumbnail=not args.no_thumbnail,
         playlist_items=args.items,
-        template=build_template(args.album, args.artist),
+        template=build_template(args.album, args.artist, args.song, args.number),
         restrict_filenames=args.ascii_filenames,
     )
 

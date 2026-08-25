@@ -125,6 +125,13 @@ would hide the file, a trailing dot or space that Windows silently discards,
 Windows device names (`CON`, `NUL`, `COM1`…), and the 255-**byte** length cap,
 truncated on a character boundary so an accent is never cut in half.
 
+The output directory from `-o` gets the same treatment, one component at a
+time. Separators are preserved, so `-o 'albums/Simon & G: What?'` becomes
+`albums/Simon and G What` rather than collapsing into a single folder. A leading
+`/`, a Windows drive letter (`C:\`) and `.` / `..` are left alone — the `:` in a
+drive letter is legitimate, unlike one in a name. The tool prints a note
+whenever it adjusts the path you asked for.
+
 The mapping lives in `FILENAME_REPLACEMENTS` in
 [cli.py](src/playlist_download/cli.py) — one dict, `key` replaced by `value`,
 an empty value meaning "delete". `&` → `and` is the only entry not required for

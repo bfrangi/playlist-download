@@ -210,6 +210,27 @@ def portable_filename(stem: str, suffix: str = "") -> str:
     return f"{stem or 'untitled'}{suffix}"
 
 
+def portable_directory(path: Path) -> Path:
+    """Apply the same narrowing to every component of a directory path.
+
+    A directory needs different treatment from a filename: "/" separates
+    components rather than being illegal, ":" is legitimate in a Windows drive
+    letter, and "." / ".." have to survive. Only the names between the
+    separators are rewritten.
+    """
+    parts = list(path.parts)
+    if not parts:
+        return path
+
+    # path.anchor is the drive and/or root ("C:\\", "/"), and always parts[0].
+    start = 1 if path.anchor else 0
+    cleaned = parts[:start] + [
+        part if part in (".", "..") else portable_filename(part)
+        for part in parts[start:]
+    ]
+    return type(path)(*cleaned)
+
+
 class PortableFilenamePP(PostProcessor):
     """Rename the finished file so it survives a copy to any other platform.
 
@@ -438,7 +459,13 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    output_dir: Path = args.output.expanduser()
+    requested_dir = args.output.expanduser()
+    output_dir = portable_directory(requested_dir)
+    if output_dir != requested_dir:
+        print(
+            f"note: using a portable output directory -> {output_dir}",
+            file=sys.stderr,
+        )
     output_dir.mkdir(parents=True, exist_ok=True)
 
     options = build_options(

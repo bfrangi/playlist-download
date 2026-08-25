@@ -101,6 +101,36 @@ at all, in which case the video title is used verbatim — including any
 "(Official Video)" padding the uploader put there. Check one file before
 committing to a whole album.
 
+### Portable filenames
+
+Before saving, the filename is narrowed to what is legal on Linux, Windows,
+macOS and Android at once — Android's shared storage is usually FAT32 or exFAT,
+so Windows' rules are the ones that bind. **Only the filename is changed; the
+tags inside the file keep their original punctuation.**
+
+| In the title | In the filename |
+| --- | --- |
+| `What? Really: yes` | `What Really yes` |
+| `Simon & Garfunkel` | `Simon and Garfunkel` |
+| `AC/DC \ Live` | `AC-DC - Live` |
+| `Song ｜ Channel` | `Song - Channel` |
+| `He said "hi"` | `He said 'hi'` |
+
+Worth knowing: yt-dlp substitutes full-width look-alikes (`：`, `？`, `｜`) for
+reserved characters rather than removing them, which is legal everywhere but
+reads as mojibake. Those are undone too.
+
+Also handled: control characters, collapsed whitespace, a leading dot that
+would hide the file, a trailing dot or space that Windows silently discards,
+Windows device names (`CON`, `NUL`, `COM1`…), and the 255-**byte** length cap,
+truncated on a character boundary so an accent is never cut in half.
+
+The mapping lives in `FILENAME_REPLACEMENTS` in
+[cli.py](src/playlist_download/cli.py) — one dict, `key` replaced by `value`,
+an empty value meaning "delete". `&` → `and` is the only entry not required for
+compatibility; it is there because `&` needs quoting in a shell one-liner, so
+delete that line if you would rather keep it.
+
 Accented characters are kept as-is, so `Corazón` stays spelled correctly. Pass
 `--ascii-filenames` if you need plain ASCII for an old car stereo or a FAT32
 stick, at the cost of turning it into `Corazon`.

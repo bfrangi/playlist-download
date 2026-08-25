@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import sys
 from importlib.metadata import PackageNotFoundError, version
@@ -23,6 +24,49 @@ YOUTUBE_HOSTS = frozenset(
         "www.youtu.be",
     }
 )
+
+# Characters that are illegal, reserved, or awkward on at least one of Linux,
+# Windows, macOS and Android. Android's shared storage is usually FAT32 or
+# exFAT, so Windows' rules are the ones that bind in practice. The value
+# replaces the key; an empty value deletes it. Edit freely.
+FILENAME_REPLACEMENTS = {
+    # Reserved on Windows. ":" is also the path separator in classic macOS.
+    "?": "",
+    ":": "",
+    "*": "",
+    "<": "",
+    ">": "",
+    '"': "'",
+    "|": "-",
+    "/": "-",
+    "\\": "-",
+    # yt-dlp has already swapped each character above for one of these
+    # look-alikes by the time a filename reaches us: full-width forms for
+    # '"*:<>?|' and big solidus for the slashes. They are legal everywhere but
+    # read as mojibake and confuse some players, so undo them too.
+    "\uff1f": "",  # ？
+    "\uff1a": "",  # ：
+    "\uff0a": "",  # ＊
+    "\uff1c": "",  # ＜
+    "\uff1e": "",  # ＞
+    "\uff02": "'",  # ＂
+    "\uff5c": "-",  # ｜
+    "\u29f8": "-",  # ⧸
+    "\u29f9": "-",  # ⧹
+    # Legal on every target filesystem. Replaced only because it needs quoting
+    # in a shell one-liner; delete this entry to keep it as-is.
+    "&": "and",
+}
+
+# Windows rejects these as a filename stem, with or without an extension.
+WINDOWS_RESERVED_STEMS = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{n}" for n in range(1, 10)}
+    | {f"LPT{n}" for n in range(1, 10)}
+)
+
+# Nearly every filesystem caps one path component at 255 bytes, not characters.
+MAX_FILENAME_BYTES = 255
 
 # Archive of finished video IDs, kept alongside the audio. Its presence is what
 # makes a second run cheap: yt-dlp skips anything listed here.
@@ -135,6 +179,69 @@ def build_template(
     parts.append(f"{escape_literal(album)} - " if album else ALBUM_FIELD)
     parts.append(escape_literal(song) if song else SONG_FIELD)
     return "".join(parts)
+
+
+def portable_filename(stem: str, suffix: str = "") -> str:
+    """Make one filename component safe on Linux, Windows, macOS and Android.
+
+    Only the name on disk is changed. The tags inside the file keep their
+    original punctuation, so a title really containing "?" still reads
+    correctly in a player.
+    """
+    for old, new in FILENAME_REPLACEMENTS.items():
+        stem = stem.replace(old, new)
+
+    # Control characters are illegal on every one of these platforms.
+    stem = "".join(c for c in stem if ord(c) >= 32 and ord(c) != 127)
+    stem = re.sub(r"\s+", " ", stem).strip()
+    # Windows silently discards a trailing dot or space; a leading dot would
+    # hide the file on Linux and macOS.
+    stem = stem.strip(". ")
+
+    if stem.upper() in WINDOWS_RESERVED_STEMS:
+        stem += "_"
+
+    # Truncate on a byte boundary, since the limit counts bytes and an accented
+    # character costs two of them.
+    budget = MAX_FILENAME_BYTES - len(suffix.encode())
+    if len(stem.encode()) > budget:
+        stem = stem.encode()[:budget].decode(errors="ignore").strip(". ")
+
+    return f"{stem or 'untitled'}{suffix}"
+
+
+class PortableFilenamePP(PostProcessor):
+    """Rename the finished file so it survives a copy to any other platform.
+
+    yt-dlp guarantees a name that is legal on the machine doing the download,
+    which is why it substitutes full-width look-alikes rather than removing
+    anything. This narrows the name to what is legal everywhere. It runs after
+    the file has reached its final location, so it sees the real audio file
+    rather than an intermediate.
+    """
+
+    def run(self, info):
+        path = info.get("filepath")
+        if not path:
+            return [], info
+
+        current = Path(path)
+        target = current.with_name(portable_filename(current.stem, current.suffix))
+        if target == current:
+            return [], info
+
+        # Two different titles can reduce to the same safe name.
+        counter = 2
+        while target.exists():
+            target = current.with_name(
+                portable_filename(f"{current.stem} ({counter})", current.suffix)
+            )
+            counter += 1
+
+        current.rename(target)
+        info["filepath"] = str(target)
+        self.to_screen(f"Renamed to a portable filename: {target.name}")
+        return [], info
 
 
 class TagOverridePP(PostProcessor):
@@ -351,6 +458,8 @@ def main() -> None:
             if overrides:
                 # 'pre_process' so the keys exist before the metadata stage.
                 ydl.add_post_processor(TagOverridePP(overrides), when="pre_process")
+            # 'after_move' runs last, once the audio is in its final place.
+            ydl.add_post_processor(PortableFilenamePP(), when="after_move")
             exit_code = ydl.download([url])
     except KeyboardInterrupt:
         print("\nInterrupted. Re-run the same command to resume.", file=sys.stderr)
